@@ -51,11 +51,12 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Image */}
           <div className="flex items-center justify-center bg-gray-100 p-8">
-            {product.image_url ? (
+            {(product.image_url || product.bandai_url) ? (
               <img
-                src={product.image_url}
+                src={product.image_url || `/api/image?url=${encodeURIComponent(product.bandai_url!)}`}
                 alt={product.name}
                 className="max-h-80 object-contain"
+                loading="lazy"
               />
             ) : (
               <div className="flex h-64 w-full items-center justify-center text-gray-400">

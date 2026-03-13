@@ -10,15 +10,23 @@ export default function ProductCard({ product }: ProductCardProps) {
   const hasStock = product.stock_info.some((s) => s.status === "in_stock");
   const hasPreorder = product.stock_info.some((s) => s.status === "preorder");
 
+  // 画像URL: image_urlがあればそのまま、なければbandai_urlからプロキシ
+  const imageUrl = product.image_url
+    ? product.image_url
+    : product.bandai_url
+      ? `/api/image?url=${encodeURIComponent(product.bandai_url)}`
+      : null;
+
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       <Link href={`/products/${product.id}`}>
         <div className="relative aspect-square bg-gray-100">
-          {product.image_url ? (
+          {imageUrl ? (
             <img
-              src={product.image_url}
+              src={imageUrl}
               alt={product.name}
               className="h-full w-full object-contain p-2"
+              loading="lazy"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-gray-400">
