@@ -1,12 +1,29 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { SAMPLE_PRODUCTS } from "@/lib/sample-data";
 import StockBadge from "@/components/StockBadge";
 import { STORES, getStoreSearchUrl } from "@/lib/types";
+import type { ProductWithStock } from "@/lib/types";
 
-async function getProduct(id: string) {
-  // TODO: Supabase接続後はDBから取得
-  return SAMPLE_PRODUCTS.find((p) => p.id === id) || null;
+export const revalidate = 300;
+
+async function getProduct(id: string): Promise<ProductWithStock | null> {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*, stock_info(*)")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      // フォールバック
+      return SAMPLE_PRODUCTS.find((p) => p.id === id) || null;
+    }
+    return data as ProductWithStock;
+  } catch {
+    return SAMPLE_PRODUCTS.find((p) => p.id === id) || null;
+  }
 }
 
 export default async function ProductPage({
@@ -128,12 +145,21 @@ export default async function ProductPage({
               )}
             </div>
 
+            {product.bandai_url && (
+              <a
+                href={product.bandai_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-block text-sm text-blue-600 hover:underline"
+              >
+                バンダイ公式ページ →
+              </a>
+            )}
+
             <p className="mt-4 text-xs text-gray-400">
               最終確認:{" "}
               {product.stock_info[0]?.checked_at
-                ? new Date(product.stock_info[0].checked_at).toLocaleString(
-                    "ja-JP"
-                  )
+                ? new Date(product.stock_info[0].checked_at).toLocaleString("ja-JP")
                 : "不明"}
             </p>
           </div>

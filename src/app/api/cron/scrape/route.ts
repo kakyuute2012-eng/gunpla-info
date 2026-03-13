@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         {
           name: product.name,
           grade: product.grade,
+          series: product.series,
           price: product.price,
           release_date: product.release_date,
           image_url: product.image_url,
@@ -30,7 +31,11 @@ export async function GET(request: NextRequest) {
         { onConflict: "bandai_url" }
       );
 
-      if (!error) upserted++;
+      if (error) {
+        console.error(`Upsert error for ${product.name}:`, error.message);
+      } else {
+        upserted++;
+      }
     }
 
     return NextResponse.json({
