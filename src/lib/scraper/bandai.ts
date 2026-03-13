@@ -15,7 +15,8 @@ interface ScrapedProduct {
  * セレクタは2026年3月時点のサイト構造に基づく
  */
 export async function scrapeBandaiProducts(): Promise<ScrapedProduct[]> {
-  const products: ScrapedProduct[] = [];
+  // bandai_url をキーに重複排除（早い発売日を優先）
+  const productMap = new Map<string, ScrapedProduct>();
 
   try {
     // 当月と来月のスケジュールを取得
@@ -28,13 +29,29 @@ export async function scrapeBandaiProducts(): Promise<ScrapedProduct[]> {
     for (const { year, month } of months) {
       const url = `https://bandai-hobby.net/schedule/?y=${year}&m=${String(month).padStart(2, "0")}`;
       const scraped = await scrapeSchedulePage(url, year, month);
-      products.push(...scraped);
+
+      for (const product of scraped) {
+        const existing = productMap.get(product.bandai_url);
+        if (existing) {
+          // 既に同じ商品がある場合、早い発売日を保持
+          if (
+            existing.release_date &&
+            product.release_date &&
+            product.release_date < existing.release_date
+          ) {
+            productMap.set(product.bandai_url, product);
+          }
+          // 既存の方が早い or 同じならスキップ
+        } else {
+          productMap.set(product.bandai_url, product);
+        }
+      }
     }
   } catch (error) {
     console.error("Bandai scraping error:", error);
   }
 
-  return products;
+  return Array.from(productMap.values());
 }
 
 async function scrapeSchedulePage(

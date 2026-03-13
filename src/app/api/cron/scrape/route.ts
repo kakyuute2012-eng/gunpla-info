@@ -20,10 +20,10 @@ export async function GET(request: NextRequest) {
     // 2. DBに保存 (upsert)
     let upserted = 0;
     for (const product of bandaiProducts) {
-      // 既存のimage_urlがSupabase Storageのものならそれを保持
+      // 既存データを取得して比較
       const { data: existing } = await supabase
         .from("products")
-        .select("image_url")
+        .select("image_url, release_date")
         .eq("bandai_url", product.bandai_url)
         .single();
 
@@ -31,13 +31,20 @@ export async function GET(request: NextRequest) {
       const existingIsStorage =
         existingImageUrl?.includes(SUPABASE_STORAGE_HOST) ?? false;
 
+      // 発売日: 既存の方が早い場合はそちらを保持
+      const existingDate = existing?.release_date ?? null;
+      let releaseDate = product.release_date;
+      if (existingDate && releaseDate && existingDate < releaseDate) {
+        releaseDate = existingDate;
+      }
+
       const { error } = await supabase.from("products").upsert(
         {
           name: product.name,
           grade: product.grade,
           series: product.series,
           price: product.price,
-          release_date: product.release_date,
+          release_date: releaseDate,
           // Supabase Storage画像がある場合はそれを保持
           image_url: existingIsStorage
             ? existingImageUrl
