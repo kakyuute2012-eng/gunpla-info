@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeBandaiProducts } from "@/lib/scraper/bandai";
+import { checkStockBatch } from "@/lib/scraper/stock";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -11,6 +12,8 @@ export async function GET(request: NextRequest) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const startTime = Date.now();
 
   try {
     // 1. バンダイからスクレイピング
@@ -65,11 +68,25 @@ export async function GET(request: NextRequest) {
     // 3. 画像がないまたはCloudFront URLの商品のimage_urlを修復
     const imagesFixed = await fixMissingImages();
 
+    // 4. 在庫チェック（残り時間で実行）
+    const elapsed = Date.now() - startTime;
+    const remainingMs = 55000 - elapsed; // 60秒制限に対して5秒マージン
+    let stockCheck = { checked: 0, updated: 0, errors: 0, details: [] as { store: string; product: string; status: string; error?: string }[] };
+    if (remainingMs > 5000) {
+      console.log(`Starting stock check with ${Math.round(remainingMs / 1000)}s budget`);
+      stockCheck = await checkStockBatch(remainingMs, 8);
+    }
+
     return NextResponse.json({
       success: true,
       scraped: bandaiProducts.length,
       upserted,
       imagesFixed,
+      stockCheck: {
+        checked: stockCheck.checked,
+        updated: stockCheck.updated,
+        errors: stockCheck.errors,
+      },
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
