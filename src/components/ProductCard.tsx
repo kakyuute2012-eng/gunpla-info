@@ -73,9 +73,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           </p>
         )}
 
-        {/* Stock badges */}
+        {/* Stock badges - 在庫あり・予約可を優先表示 */}
         <div className="mt-2 flex flex-wrap gap-1">
-          {product.stock_info.slice(0, 3).map((stock) => (
+          {[...product.stock_info]
+            .sort((a, b) => {
+              const order = { in_stock: 0, preorder: 1, out_of_stock: 2 };
+              return (order[a.status] ?? 3) - (order[b.status] ?? 3);
+            })
+            .slice(0, 4)
+            .map((stock) => (
             <StockBadge
               key={stock.id}
               store={stock.store}
