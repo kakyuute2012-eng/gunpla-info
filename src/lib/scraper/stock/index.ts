@@ -4,6 +4,18 @@ import { StockCheckResult, StoreSlug } from "./types";
 import { checkAmazonStock } from "./amazon";
 import { checkYodobashiStock } from "./yodobashi";
 import { checkAmiamiStock } from "./amiami";
+import { checkRakutenStock } from "./rakuten";
+import { checkYahooStock } from "./yahoo";
+import { checkBiccameraStock } from "./biccamera";
+import { checkJoshinStock } from "./joshin";
+import { checkYamadaStock } from "./yamada";
+import { checkEdionStock } from "./edion";
+import { checkHobbysearchStock } from "./hobbysearch";
+import { checkTamtamStock } from "./tamtam";
+import { checkDmmStock } from "./dmm";
+import { checkBatonStock } from "./baton";
+import { checkMokeinoStock } from "./mokeino";
+import { checkSurugayaStock } from "./surugaya";
 
 export interface StockCheckBatchResult {
   checked: number;
@@ -25,8 +37,32 @@ function getChecker(
       return checkYodobashiStock;
     case "amiami":
       return checkAmiamiStock;
+    case "rakuten":
+      return checkRakutenStock;
+    case "yahoo":
+      return checkYahooStock;
+    case "biccamera":
+      return checkBiccameraStock;
+    case "joshin":
+      return checkJoshinStock;
+    case "yamada":
+      return checkYamadaStock;
+    case "edion":
+      return checkEdionStock;
+    case "hobbysearch":
+      return checkHobbysearchStock;
+    case "tamtam":
+      return checkTamtamStock;
+    case "dmm":
+      return checkDmmStock;
+    case "surugaya":
+      return checkSurugayaStock;
+    case "baton":
+      return checkBatonStock;
+    case "mokeino":
+      return checkMokeinoStock;
     default:
-      return null; // surugaya, bandai は未対応
+      return null; // bandai は未対応
   }
 }
 
@@ -53,7 +89,7 @@ export async function checkStockBatch(
       .from("stock_info")
       .select("id, product_id, store, status, url, products(name)")
       .not("url", "is", null)
-      .in("store", ["amazon", "yodobashi", "amiami"])
+      .in("store", ["amazon", "yodobashi", "amiami", "rakuten", "yahoo", "biccamera", "joshin", "yamada", "edion", "hobbysearch", "tamtam", "dmm", "surugaya", "baton", "mokeino"])
       .order("checked_at", { ascending: true })
       .limit(batchSize);
 

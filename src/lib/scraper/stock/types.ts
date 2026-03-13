@@ -4,7 +4,12 @@ export interface StockCheckResult {
   error?: string; // CAPTCHA等でチェック失敗時
 }
 
-export type StoreSlug = "amazon" | "yodobashi" | "amiami" | "surugaya" | "bandai";
+export type StoreSlug =
+  | "amazon" | "rakuten" | "yahoo"
+  | "yodobashi" | "biccamera" | "joshin" | "yamada" | "edion"
+  | "amiami" | "hobbysearch" | "tamtam"
+  | "surugaya" | "dmm" | "bandai"
+  | "baton" | "mokeino";
 
 export type StockChecker = (url: string) => Promise<StockCheckResult>;
 
